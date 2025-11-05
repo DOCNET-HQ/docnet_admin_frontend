@@ -25,7 +25,7 @@ interface DoctorData extends BaseTableData {
     name: string
     email: string
     gender: string
-    speciality: string
+    specialty: string
     state: string
     country: string
     is_active: boolean
@@ -87,10 +87,10 @@ const doctorColumns: ColumnDef<DoctorData>[] = [
         ),
     },
     {
-        accessorKey: "speciality",
-        header: "Speciality",
+        accessorKey: "specialty",
+        header: "specialty",
         cell: ({ row }) => (
-            <div>{row.original.speciality}</div>
+            <div>{row.original.specialty}</div>
         ),
     },
     {
@@ -192,7 +192,7 @@ export default function DoctorsPage() {
             name: "Dr. Sarah Johnson",
             email: "sarah.johnson@hospital.com",
             gender: "Female",
-            speciality: "Cardiology",
+            specialty: "Cardiology",
             state: "California",
             country: "United States",
             is_active: true,
@@ -204,7 +204,7 @@ export default function DoctorsPage() {
             name: "Dr. Michael Chen",
             email: "michael.chen@hospital.com",
             gender: "Male",
-            speciality: "Neurology",
+            specialty: "Neurology",
             state: "New York",
             country: "United States",
             is_active: true,
@@ -216,7 +216,7 @@ export default function DoctorsPage() {
             name: "Dr. Emily Rodriguez",
             email: "emily.rodriguez@hospital.com",
             gender: "Female",
-            speciality: "Pediatrics",
+            specialty: "Pediatrics",
             state: "Texas",
             country: "United States",
             is_active: false,
@@ -228,7 +228,7 @@ export default function DoctorsPage() {
             name: "Dr. James Wilson",
             email: "james.wilson@hospital.com",
             gender: "Male",
-            speciality: "Orthopedics",
+            specialty: "Orthopedics",
             state: "Florida",
             country: "United States",
             is_active: true,
@@ -240,7 +240,7 @@ export default function DoctorsPage() {
             name: "Dr. Aisha Patel",
             email: "aisha.patel@hospital.com",
             gender: "Female",
-            speciality: "Dermatology",
+            specialty: "Dermatology",
             state: "Illinois",
             country: "United States",
             is_active: true,
@@ -252,7 +252,7 @@ export default function DoctorsPage() {
             name: "Dr. Robert Martinez",
             email: "robert.martinez@hospital.com",
             gender: "Male",
-            speciality: "Oncology",
+            specialty: "Oncology",
             state: "Washington",
             country: "United States",
             is_active: true,
@@ -264,7 +264,7 @@ export default function DoctorsPage() {
             name: "Dr. Linda Thompson",
             email: "linda.thompson@hospital.com",
             gender: "Female",
-            speciality: "Psychiatry",
+            specialty: "Psychiatry",
             state: "Massachusetts",
             country: "United States",
             is_active: false,
@@ -276,7 +276,7 @@ export default function DoctorsPage() {
             name: "Dr. David Kim",
             email: "david.kim@hospital.com",
             gender: "Male",
-            speciality: "Surgery",
+            specialty: "Surgery",
             state: "Georgia",
             country: "United States",
             is_active: true,
@@ -288,7 +288,7 @@ export default function DoctorsPage() {
             name: "Dr. Maria Garcia",
             email: "maria.garcia@hospital.com",
             gender: "Female",
-            speciality: "Obstetrics",
+            specialty: "Obstetrics",
             state: "Arizona",
             country: "United States",
             is_active: true,
@@ -300,7 +300,7 @@ export default function DoctorsPage() {
             name: "Dr. Thomas Anderson",
             email: "thomas.anderson@hospital.com",
             gender: "Male",
-            speciality: "Radiology",
+            specialty: "Radiology",
             state: "Colorado",
             country: "United States",
             is_active: true,
