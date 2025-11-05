@@ -434,7 +434,7 @@ const DoctorProfilePage = () => {
                             <span className="font-semibold capitalize">{pendingStatus}</span>?
                         </DialogDescription>
                     </DialogHeader>
-                    
+
                     {(pendingStatus === "rejected" || pendingStatus === "suspended") && (
                         <div className="space-y-2">
                             <Label htmlFor="reason">
