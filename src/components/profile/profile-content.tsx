@@ -8,8 +8,6 @@ import {
 import Personal from "@/components/profile/tabs/personal";
 import Account from "@/components/profile/tabs/account";
 import Security from "@/components/profile/tabs/security";
-import KYC from "@/components/profile/tabs/kyc";
-
 
 export default function ProfileContent( { profileData }: { profileData: any } ) {
   return (
