@@ -20,10 +20,10 @@ import { useGetAppointmentStatsQuery } from "@/lib/api/appointmentStatsApi"
 import { Loader } from "@/components/dashboard/loader"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
-import { 
-    Calendar, 
-    Users, 
-    CheckCircle, 
+import {
+    Calendar,
+    Users,
+    CheckCircle,
     Clock,
     Building,
     TrendingUp,
@@ -56,18 +56,24 @@ const getInitials = (name: string) => {
 
 // Helper function to get status badge color
 const getStatusColor = (status: string) => {
-    switch (status?.toUpperCase()) {
-        case "CONFIRMED":
-        case "SCHEDULED":
-            return "bg-green-600 text-white"
-        case "PENDING":
-            return "bg-yellow-500 text-white"
-        case "CANCELLED":
-            return "bg-red-600 text-white"
-        case "COMPLETED":
+    const s = status.toLowerCase()
+
+    switch (s) {
+        case "scheduled":
+            return "bg-amber-400 text-white"
+        case "confirmed":
+            return "bg-cyan-600 text-white"
+        case "in_progress":
             return "bg-blue-600 text-white"
-        case "RESCHEDULED":
-            return "bg-purple-600 text-white"
+        case "completed":
+            return "bg-green-600 text-white"
+        case "cancelled":
+        case "canceled":
+            return "bg-red-600 text-white"
+        case "no_show":
+            return "bg-gray-600 text-white"
+        case "rescheduled":
+            return "bg-orange-500 text-white"
         default:
             return "bg-gray-500 text-white"
     }
@@ -87,15 +93,15 @@ const formatDate = (dateString: string) => {
 const formatTime = (startTime: string, endTime: string) => {
     const start = new Date(startTime)
     const end = new Date(endTime)
-    
-    return `${start.toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
+
+    return `${start.toLocaleTimeString('en-US', {
+        hour: 'numeric',
         minute: '2-digit',
-        hour12: true 
-    })} - ${end.toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
+        hour12: true
+    })} - ${end.toLocaleTimeString('en-US', {
+        hour: 'numeric',
         minute: '2-digit',
-        hour12: true 
+        hour12: true
     })}`
 }
 
@@ -188,8 +194,8 @@ const appointmentColumns: ColumnDef<AppointmentData>[] = [
         cell: ({ row }) => {
             const status = row.original.status
             return (
-                <Badge 
-                    variant="secondary" 
+                <Badge
+                    variant="secondary"
                     className={`${getStatusColor(status)} px-2 capitalize`}
                 >
                     {status?.toLowerCase()}
@@ -230,14 +236,14 @@ const appointmentColumns: ColumnDef<AppointmentData>[] = [
 ]
 
 // Stats Card Component
-const StatsCard = ({ 
-    title, 
-    value, 
-    icon: Icon, 
+const StatsCard = ({
+    title,
+    value,
+    icon: Icon,
     description,
     trend,
-    className = "" 
-}: { 
+    className = ""
+}: {
     title: string
     value: string | number
     icon: React.ElementType
