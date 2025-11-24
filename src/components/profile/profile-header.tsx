@@ -1,11 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Calendar, Mail, MapPin, PhoneCall, Loader2 } from "lucide-react";
 import { useState, useRef } from "react";
 import { useUpdateProfileMutation } from "@/lib/api/apiSlice";
-import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import { useAppDispatch } from "@/hooks/redux";
 import { updateUserPhoto } from "@/lib/store/slices/authSlice";
 import { toast } from 'sonner';
 
@@ -99,17 +98,17 @@ export default function ProfileHeader(
     }
   };
 
-  const getStatusBgColor = (status: string) => {
-    if (status === "VERIFIED") {
-      return "bg-green-600"
-    } else if (status === "SUSPENDED") {
-      return "bg-blue-600"
-    } else if (status === "REJECTED") {
-      return "bg-red-600"
-    }
+  // const getStatusBgColor = (status: string) => {
+  //   if (status === "VERIFIED") {
+  //     return "bg-green-600"
+  //   } else if (status === "SUSPENDED") {
+  //     return "bg-blue-600"
+  //   } else if (status === "REJECTED") {
+  //     return "bg-red-600"
+  //   }
 
-    return "bg-yellow-500"
-  }
+  //   return "bg-yellow-500"
+  // }
 
   const getDisplayImage = () => {
     if (selectedImage) return selectedImage;
