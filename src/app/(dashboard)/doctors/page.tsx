@@ -322,7 +322,6 @@ export default function AdminDoctorsPage() {
     if (statsError) {
         console.error("Stats fetch error:", statsError)
     }
-
     const handleDataChange = (newData: DoctorData[]) => {
         console.log("Data changed:", newData)
     }

@@ -407,8 +407,7 @@ const DoctorProfilePage = () => {
                             Are you sure you want to change the KYC status to{" "}
                             <span className="font-semibold capitalize">{pendingStatus.toLowerCase()}</span>?
                         </DialogDescription>
-                    </DialogHeader>
-                    
+                    </DialogHeader>                    
                     {(pendingStatus === 'REJECTED' || pendingStatus === 'SUSPENDED') && (
                         <div className="space-y-2">
                             <Label htmlFor="reason">
