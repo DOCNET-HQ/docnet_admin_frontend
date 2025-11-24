@@ -14,10 +14,25 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { IconDotsVertical, IconCalendar, IconClock } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useState } from "react"
+import { useGetAppointmentsQuery } from "@/lib/api/appointmentsApi"
+import { useGetAppointmentStatsQuery } from "@/lib/api/appointmentStatsApi"
+import { Loader } from "@/components/dashboard/loader"
+import Link from "next/link"
+import { Card, CardContent } from "@/components/ui/card"
+import { 
+    Calendar, 
+    Users, 
+    CheckCircle, 
+    Clock,
+    Building,
+    TrendingUp,
+    AlertCircle
+} from "lucide-react"
 
-// Define your data type
+// Define your data type based on API response
 interface AppointmentData extends BaseTableData {
-    id: number
+    id: string
     doctor_photo: string
     doctor_name: string
     patient_photo: string
@@ -26,22 +41,24 @@ interface AppointmentData extends BaseTableData {
     time: string
     reason: string
     status: string
+    appointment_type: string
 }
 
 // Helper function to get initials from name
 const getInitials = (name: string) => {
     return name
-        .split(' ')
+        ?.split(' ')
         .map(n => n[0])
         .join('')
         .toUpperCase()
-        .slice(0, 2)
+        .slice(0, 2) || 'NA'
 }
 
 // Helper function to get status badge color
 const getStatusColor = (status: string) => {
-    switch (status.toUpperCase()) {
+    switch (status?.toUpperCase()) {
         case "CONFIRMED":
+        case "SCHEDULED":
             return "bg-green-600 text-white"
         case "PENDING":
             return "bg-yellow-500 text-white"
@@ -66,12 +83,39 @@ const formatDate = (dateString: string) => {
     })
 }
 
+// Helper function to format time
+const formatTime = (startTime: string, endTime: string) => {
+    const start = new Date(startTime)
+    const end = new Date(endTime)
+    
+    return `${start.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+    })} - ${end.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+    })}`
+}
+
+// Helper function to get appointment type display name
+// const getAppointmentType = (type: string) => {
+//     const typeMap: Record<string, string> = {
+//         consultation: 'Consultation',
+//         follow_up: 'Follow-up',
+//         checkup: 'Checkup',
+//         emergency: 'Emergency',
+//         other: 'Other'
+//     };
+//     return typeMap[type] || type;
+// }
+
 // Define your columns
 const appointmentColumns: ColumnDef<AppointmentData>[] = [
     {
         id: "doctor",
         header: "Doctor",
-        accessorKey: "doctor_name",
         cell: ({ row }) => (
             <div className="flex items-center gap-3">
                 <Avatar className="h-9 w-9">
@@ -84,7 +128,7 @@ const appointmentColumns: ColumnDef<AppointmentData>[] = [
                         {getInitials(row.original.doctor_name)}
                     </AvatarFallback>
                 </Avatar>
-                <div className="font-medium">{row.original.doctor_name}</div>
+                <div className="font-medium">Dr. {row.original.doctor_name}</div>
             </div>
         ),
         enableHiding: false,
@@ -92,7 +136,6 @@ const appointmentColumns: ColumnDef<AppointmentData>[] = [
     {
         id: "patient",
         header: "Patient",
-        accessorKey: "patient_name",
         cell: ({ row }) => (
             <div className="flex items-center gap-3">
                 <Avatar className="h-9 w-9">
@@ -116,7 +159,7 @@ const appointmentColumns: ColumnDef<AppointmentData>[] = [
         cell: ({ row }) => (
             <div className="flex items-center gap-2 text-sm">
                 <IconCalendar className="size-4 text-muted-foreground" />
-                <span>{formatDate(row.original.date)}</span>
+                <span>{row.original.date}</span>
             </div>
         ),
     },
@@ -135,7 +178,7 @@ const appointmentColumns: ColumnDef<AppointmentData>[] = [
         header: "Reason",
         cell: ({ row }) => (
             <div className="max-w-xs truncate" title={row.original.reason}>
-                {row.original.reason}
+                {row.original.reason || "No reason provided"}
             </div>
         ),
     },
@@ -147,9 +190,9 @@ const appointmentColumns: ColumnDef<AppointmentData>[] = [
             return (
                 <Badge 
                     variant="secondary" 
-                    className={`${getStatusColor(status)} px-2`}
+                    className={`${getStatusColor(status)} px-2 capitalize`}
                 >
-                    {status.charAt(0) + status.slice(1).toLowerCase()}
+                    {status?.toLowerCase()}
                 </Badge>
             )
         },
@@ -169,135 +212,104 @@ const appointmentColumns: ColumnDef<AppointmentData>[] = [
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem>View Details ${row.id}</DropdownMenuItem>
-                    <DropdownMenuItem>Reschedule</DropdownMenuItem>
-                    <DropdownMenuItem>Send Reminder</DropdownMenuItem>
+                    <DropdownMenuItem>
+                        <Link href={`/appointments/${row.original.id}`} className="w-full">
+                            View Details
+                        </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem disabled>Reschedule</DropdownMenuItem>
+                    <DropdownMenuItem disabled>Send Reminder</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive">Cancel</DropdownMenuItem>
+                    <DropdownMenuItem variant="destructive" disabled>
+                        Cancel
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         ),
     },
 ]
 
+// Stats Card Component
+const StatsCard = ({ 
+    title, 
+    value, 
+    icon: Icon, 
+    description,
+    trend,
+    className = "" 
+}: { 
+    title: string
+    value: string | number
+    icon: React.ElementType
+    description?: string
+    trend?: string
+    className?: string
+}) => (
+    <Card className={className}>
+        <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+                <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                        {title}
+                    </p>
+                    <div className="flex items-baseline gap-2">
+                        <p className="text-2xl font-bold">{value}</p>
+                        {trend && (
+                            <Badge variant="secondary" className="text-xs">
+                                {trend}
+                            </Badge>
+                        )}
+                    </div>
+                    {description && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {description}
+                        </p>
+                    )}
+                </div>
+                <div className="flex-shrink-0">
+                    <div className="p-3 rounded-full bg-primary/10">
+                        <Icon className="h-6 w-6 text-primary" />
+                    </div>
+                </div>
+            </div>
+        </CardContent>
+    </Card>
+)
+
 // Usage in your component
 export default function AppointmentsPage() {
-    const data: AppointmentData[] = [
-        {
-            id: 1,
-            doctor_photo: "https://i.pravatar.cc/150?img=12",
-            doctor_name: "Dr. Sarah Johnson",
-            patient_photo: "https://i.pravatar.cc/150?img=1",
-            patient_name: "John Smith",
-            date: "2025-10-15",
-            time: "9:00 AM - 9:30 AM",
-            reason: "Annual checkup and blood pressure monitoring",
-            status: "CONFIRMED",
-        },
-        {
-            id: 2,
-            doctor_photo: "https://i.pravatar.cc/150?img=13",
-            doctor_name: "Dr. Michael Chen",
-            patient_photo: "https://i.pravatar.cc/150?img=5",
-            patient_name: "Emma Johnson",
-            date: "2025-10-15",
-            time: "10:30 AM - 11:00 AM",
-            reason: "Follow-up consultation for migraine treatment",
-            status: "CONFIRMED",
-        },
-        {
-            id: 3,
-            doctor_photo: "https://i.pravatar.cc/150?img=47",
-            doctor_name: "Dr. Emily Rodriguez",
-            patient_photo: "https://i.pravatar.cc/150?img=8",
-            patient_name: "Michael Brown",
-            date: "2025-10-16",
-            time: "2:00 PM - 2:30 PM",
-            reason: "Pediatric consultation for child vaccination",
-            status: "PENDING",
-        },
-        {
-            id: 4,
-            doctor_photo: "https://i.pravatar.cc/150?img=33",
-            doctor_name: "Dr. James Wilson",
-            patient_photo: "https://i.pravatar.cc/150?img=9",
-            patient_name: "Sophia Davis",
-            date: "2025-10-16",
-            time: "3:30 PM - 4:00 PM",
-            reason: "Orthopedic assessment for knee pain",
-            status: "CONFIRMED",
-        },
-        {
-            id: 5,
-            doctor_photo: "https://i.pravatar.cc/150?img=45",
-            doctor_name: "Dr. Aisha Patel",
-            patient_photo: "https://i.pravatar.cc/150?img=11",
-            patient_name: "William Wilson",
-            date: "2025-10-17",
-            time: "11:00 AM - 11:30 AM",
-            reason: "Dermatology consultation for skin condition",
-            status: "RESCHEDULED",
-        },
-        {
-            id: 6,
-            doctor_photo: "https://i.pravatar.cc/150?img=52",
-            doctor_name: "Dr. Robert Martinez",
-            patient_photo: "https://i.pravatar.cc/150?img=16",
-            patient_name: "Olivia Martinez",
-            date: "2025-10-17",
-            time: "1:30 PM - 2:00 PM",
-            reason: "Oncology follow-up and test results review",
-            status: "COMPLETED",
-        },
-        {
-            id: 7,
-            doctor_photo: "https://i.pravatar.cc/150?img=48",
-            doctor_name: "Dr. Linda Thompson",
-            patient_photo: "https://i.pravatar.cc/150?img=17",
-            patient_name: "James Anderson",
-            date: "2025-10-18",
-            time: "10:00 AM - 10:30 AM",
-            reason: "Mental health counseling session",
-            status: "CANCELLED",
-        },
-        {
-            id: 8,
-            doctor_photo: "https://i.pravatar.cc/150?img=59",
-            doctor_name: "Dr. David Kim",
-            patient_photo: "https://i.pravatar.cc/150?img=20",
-            patient_name: "Isabella Taylor",
-            date: "2025-10-18",
-            time: "4:00 PM - 4:30 PM",
-            reason: "Pre-surgical consultation and evaluation",
-            status: "CONFIRMED",
-        },
-        {
-            id: 9,
-            doctor_photo: "https://i.pravatar.cc/150?img=32",
-            doctor_name: "Dr. Maria Garcia",
-            patient_photo: "https://i.pravatar.cc/150?img=27",
-            patient_name: "Benjamin Thomas",
-            date: "2025-10-19",
-            time: "9:30 AM - 10:00 AM",
-            reason: "Prenatal checkup and ultrasound",
-            status: "PENDING",
-        },
-        {
-            id: 10,
-            doctor_photo: "https://i.pravatar.cc/150?img=60",
-            doctor_name: "Dr. Thomas Anderson",
-            patient_photo: "https://i.pravatar.cc/150?img=29",
-            patient_name: "Mia Garcia",
-            date: "2025-10-19",
-            time: "2:30 PM - 3:00 PM",
-            reason: "Radiology scan interpretation and consultation",
-            status: "COMPLETED",
-        },
-    ]
+    const [currentPage, setCurrentPage] = useState(1)
+    const [pageSize, setPageSize] = useState(10)
+    const [searchQuery, setSearchQuery] = useState("")
+
+    const {
+        data: appointmentsResponse,
+        isLoading: appointmentsLoading,
+        error: fetchError,
+    } = useGetAppointmentsQuery({
+        page: currentPage,
+        page_size: pageSize,
+        search: searchQuery || undefined,
+    })
+
+    const {
+        data: statsData,
+        isLoading: statsLoading,
+        error: statsError
+    } = useGetAppointmentStatsQuery()
+
+    // Handle fetch errors
+    if (fetchError) {
+        toast.error("Failed to load appointments")
+        console.error("Fetch error:", fetchError)
+    }
+
+    if (statsError) {
+        console.error("Stats fetch error:", statsError)
+    }
 
     const handleDataChange = (newData: AppointmentData[]) => {
         console.log("Data changed:", newData)
-        // You can save the new order to your backend here
     }
 
     const handleRowsSelected = (selectedRows: AppointmentData[]) => {
@@ -309,29 +321,180 @@ export default function AppointmentsPage() {
         toast.success("Add Appointment clicked - implement your add logic here")
     }
 
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page)
+    }
+
+    // const handlePageSizeChange = (size: number) => {
+    //     setPageSize(size)
+    //     setCurrentPage(1)
+    // }
+
+    // Transform API data to table format
+    const tableData: AppointmentData[] = appointmentsResponse?.results?.map(appointment => ({
+        id: appointment.id,
+        doctor_photo: appointment.doctor?.photo || "",
+        doctor_name: appointment.doctor?.name || "Unknown Doctor",
+        patient_photo: appointment.patient?.photo || "",
+        patient_name: appointment.patient?.name || "Unknown Patient",
+        date: formatDate(appointment.scheduled_start_time),
+        time: formatTime(appointment.scheduled_start_time, appointment.scheduled_end_time),
+        reason: appointment.reason,
+        status: appointment.status,
+        appointment_type: appointment.appointment_type,
+    })) || []
+
+    const isLoading = appointmentsLoading || statsLoading
+
     return (
         <div className="flex flex-1 flex-col gap-4 p-5 pt-0">
-            <div className="grid auto-rows-min gap-4 md:grid-cols-3 mb-7">
-                <div className="bg-muted/50 aspect-video rounded-xl" />
-                <div className="bg-muted/50 aspect-video rounded-xl" />
-                <div className="bg-muted/50 aspect-video rounded-xl" />
+            {/* Stats Cards Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
+                {statsLoading ? (
+                    // Loading state for stats cards
+                    Array.from({ length: 4 }).map((_, index) => (
+                        <Card key={index} className="animate-pulse">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex-1 space-y-2">
+                                        <div className="h-4 bg-muted rounded w-3/4"></div>
+                                        <div className="h-6 bg-muted rounded w-1/2"></div>
+                                    </div>
+                                    <div className="w-12 h-12 bg-muted rounded-full"></div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))
+                ) : statsData ? (
+                    // Admin Dashboard Stats Cards
+                    <>
+                        <StatsCard
+                            title="Total Appointments"
+                            value={statsData.total_appointments || 0}
+                            icon={Calendar}
+                            description="All time appointments"
+                            className="border-l-4 border-l-blue-500"
+                        />
+                        <StatsCard
+                            title="Today's Appointments"
+                            value={statsData.today_appointments || 0}
+                            icon={Clock}
+                            description="Scheduled for today"
+                            className="border-l-4 border-l-green-500"
+                        />
+                        <StatsCard
+                            title="Upcoming Appointments"
+                            value={statsData.upcoming_appointments || 0}
+                            icon={TrendingUp}
+                            description="Next 7 days"
+                            className="border-l-4 border-l-orange-500"
+                        />
+                        {'total_hospitals_with_appointments' in statsData ? (
+                            <StatsCard
+                                title="Active Hospitals"
+                                value={(statsData as any).total_hospitals_with_appointments || 0}
+                                icon={Building}
+                                description="Hospitals with appointments"
+                                className="border-l-4 border-l-purple-500"
+                            />
+                        ) : (
+                            <StatsCard
+                                title="Pending Confirmation"
+                                value={statsData.pending_confirmation || 0}
+                                icon={AlertCircle}
+                                description="Awaiting confirmation"
+                                className="border-l-4 border-l-yellow-500"
+                            />
+                        )}
+                    </>
+                ) : (
+                    // Fallback when no stats data
+                    <>
+                        <StatsCard
+                            title="Total Appointments"
+                            value={appointmentsResponse?.count || 0}
+                            icon={Calendar}
+                            description="All appointments"
+                            className="border-l-4 border-l-blue-500"
+                        />
+                        <StatsCard
+                            title="Today's Appointments"
+                            value={0}
+                            icon={Clock}
+                            description="Scheduled for today"
+                            className="border-l-4 border-l-green-500"
+                        />
+                        <StatsCard
+                            title="Active Doctors"
+                            value={0}
+                            icon={Users}
+                            description="Doctors with appointments"
+                            className="border-l-4 border-l-orange-500"
+                        />
+                        <StatsCard
+                            title="Completion Rate"
+                            value="0%"
+                            icon={CheckCircle}
+                            description="Successful appointments"
+                            className="border-l-4 border-l-purple-500"
+                        />
+                    </>
+                )}
             </div>
 
+            {/* Additional Admin-specific Stats Row */}
+            {statsData && 'system_wide_completed' in statsData && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-7">
+                    <StatsCard
+                        title="Completed This Month"
+                        value={(statsData as any).system_wide_completed || 0}
+                        icon={CheckCircle}
+                        description="System-wide completions"
+                        className="border-l-4 border-l-green-500"
+                    />
+                    <StatsCard
+                        title="Cancellation Rate"
+                        value={`${(statsData as any).system_wide_cancellation_rate || 0}%`}
+                        icon={AlertCircle}
+                        description="System-wide rate"
+                        className="border-l-4 border-l-red-500"
+                    />
+                    <StatsCard
+                        title="Pending Confirmation"
+                        value={statsData.pending_confirmation || 0}
+                        icon={Clock}
+                        description="Awaiting doctor confirmation"
+                        className="border-l-4 border-l-yellow-500"
+                    />
+                </div>
+            )}
+
             <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min px-7 py-10">
-                <DataTable
-                    data={data}
-                    columns={appointmentColumns}
-                    enableDragDrop={false}
-                    enableRowSelection={true}
-                    enableColumnVisibility={true}
-                    enablePagination={true}
-                    onDataChange={handleDataChange}
-                    onRowsSelected={handleRowsSelected}
-                    showAddButton={true}
-                    onAddClick={handleAddClick}
-                    addButtonLabel="Add Appointment"
-                    pageSize={10}
-                />
+                {isLoading ? (
+                    <div className="flex items-center justify-center h-32">
+                        <Loader />
+                    </div>
+                ) : (
+                    <DataTable
+                        data={tableData}
+                        columns={appointmentColumns}
+                        enableDragDrop={false}
+                        enableRowSelection={true}
+                        enableColumnVisibility={true}
+                        enablePagination={true}
+                        onDataChange={handleDataChange}
+                        onRowsSelected={handleRowsSelected}
+                        showAddButton={false}
+                        onAddClick={handleAddClick}
+                        onSearchChange={setSearchQuery}
+                        pageSize={pageSize}
+                        currentPage={currentPage}
+                        // totalItems={appointmentsResponse?.count || 0}
+                        onPageChange={handlePageChange}
+                        // onPageSizeChange={handlePageSizeChange}
+                        isLoading={isLoading}
+                    />
+                )}
             </div>
         </div>
     )
