@@ -8,6 +8,11 @@ export interface User {
   kycStatus?: string
 }
 
+export interface Rating {
+  average_rating: number
+  total_reviews: number
+}
+
 export interface AuthResponse {
   user: User
   access: string
