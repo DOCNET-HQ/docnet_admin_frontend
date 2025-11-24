@@ -9,7 +9,6 @@ import {
     CircleUserRound,
     LayoutDashboard,
     GalleryVerticalEnd,
-    MessageCircleDashed,
 
 } from "lucide-react"
 
@@ -69,6 +68,12 @@ export function DashboardSidebar({ profileData, ...props }: DashboardSidebarProp
                 isActive: IsPathActive("/")
             },
             {
+                title: "Hospitals",
+                url: "/hospitals",
+                icon: UserRoundPlus,
+                isActive: IsPathActive("/hospitals")
+            },
+            {
                 title: "Doctors",
                 url: "/doctors",
                 icon: UserRoundPlus,
@@ -86,12 +91,12 @@ export function DashboardSidebar({ profileData, ...props }: DashboardSidebarProp
                 icon: ClipboardClock,
                 isActive: IsPathActive("/appointments")
             },
-            {
-                title: "Messages",
-                url: "/messages",
-                icon: MessageCircleDashed,
-                isActive: IsPathActive("/messages")
-            },
+            // {
+            //     title: "Messages",
+            //     url: "/messages",
+            //     icon: MessageCircleDashed,
+            //     isActive: IsPathActive("/messages")
+            // },
             {
                 title: "Reports",
                 url: "/reports",
