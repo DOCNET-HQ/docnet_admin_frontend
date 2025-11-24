@@ -7,11 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { 
-    Calendar, 
-    Clock, 
-    User, 
-    Stethoscope, 
+import {
+    Calendar,
+    Clock,
+    User,
+    Stethoscope,
     FileText,
     ArrowLeft,
 } from 'lucide-react';
@@ -68,22 +68,28 @@ export default function AppointmentDetailsPage() {
     };
 
     const getStatusColor = (status: string) => {
-        switch (status?.toUpperCase()) {
-            case "CONFIRMED":
-            case "SCHEDULED":
-                return "bg-green-600 text-white";
-            case "PENDING":
-                return "bg-yellow-500 text-white";
-            case "CANCELLED":
-                return "bg-red-600 text-white";
-            case "COMPLETED":
-                return "bg-blue-600 text-white";
-            case "RESCHEDULED":
-                return "bg-purple-600 text-white";
+        const s = status.toLowerCase()
+
+        switch (s) {
+            case "scheduled":
+                return "bg-amber-400 text-white"
+            case "confirmed":
+                return "bg-cyan-600 text-white"
+            case "in_progress":
+                return "bg-blue-600 text-white"
+            case "completed":
+                return "bg-green-600 text-white"
+            case "cancelled":
+            case "canceled":
+                return "bg-red-600 text-white"
+            case "no_show":
+                return "bg-gray-600 text-white"
+            case "rescheduled":
+                return "bg-orange-500 text-white"
             default:
-                return "bg-gray-500 text-white";
+                return "bg-gray-500 text-white"
         }
-    };
+    }
 
     const getAppointmentType = (type: string) => {
         const typeMap: Record<string, string> = {
