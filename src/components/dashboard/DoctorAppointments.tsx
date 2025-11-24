@@ -23,11 +23,11 @@ interface DoctorAppointmentsProps {
     onBookAppointment?: () => void;
 }
 
-export default function DoctorAppointments({ 
-    doctorId, 
-    showPatientColumn = false, 
+export default function DoctorAppointments({
+    doctorId,
+    showPatientColumn = false,
     ableToBookAppointment = true,
-    onBookAppointment 
+    onBookAppointment
 }: DoctorAppointmentsProps) {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
@@ -52,14 +52,28 @@ export default function DoctorAppointments({
     const prevPage = () => currentPage > 1 && setCurrentPage(currentPage - 1);
 
     const getStatusColor = (status: string) => {
-        switch (status.toLowerCase()) {
-            case 'completed': return 'bg-green-600 hover:bg-green-600';
-            case 'scheduled': return 'bg-blue-600 hover:bg-blue-600';
-            case 'cancelled': return 'bg-red-600 hover:bg-red-600';
-            case 'confirmed': return 'bg-purple-600 hover:bg-purple-600';
-            default: return 'bg-gray-600 hover:bg-gray-600';
+        const s = status.toLowerCase()
+
+        switch (s) {
+            case "scheduled":
+                return "bg-amber-400 text-white"
+            case "confirmed":
+                return "bg-cyan-600 text-white"
+            case "in_progress":
+                return "bg-blue-600 text-white"
+            case "completed":
+                return "bg-green-600 text-white"
+            case "cancelled":
+            case "canceled":
+                return "bg-red-600 text-white"
+            case "no_show":
+                return "bg-gray-600 text-white"
+            case "rescheduled":
+                return "bg-orange-500 text-white"
+            default:
+                return "bg-gray-500 text-white"
         }
-    };
+    }
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -72,15 +86,15 @@ export default function DoctorAppointments({
     const formatTime = (startTime: string, endTime: string) => {
         const start = new Date(startTime);
         const end = new Date(endTime);
-        
-        return `${start.toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
+
+        return `${start.toLocaleTimeString('en-US', {
+            hour: 'numeric',
             minute: '2-digit',
-            hour12: true 
-        })} - ${end.toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
+            hour12: true
+        })} - ${end.toLocaleTimeString('en-US', {
+            hour: 'numeric',
             minute: '2-digit',
-            hour12: true 
+            hour12: true
         })}`;
     };
 
@@ -112,8 +126,8 @@ export default function DoctorAppointments({
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 sm:pb-4 px-4 sm:px-6">
                 <CardTitle className="text-base sm:text-lg">Appointment History</CardTitle>
                 {ableToBookAppointment && onBookAppointment && (
-                    <Button 
-                        size="sm" 
+                    <Button
+                        size="sm"
                         className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer text-xs sm:text-sm"
                         onClick={onBookAppointment}
                     >
@@ -148,7 +162,7 @@ export default function DoctorAppointments({
                                             {showPatientColumn && (
                                                 <td className="py-3 sm:py-4 px-2 sm:px-4 text-xs">
                                                     {appointment.patient ? (
-                                                        <Link 
+                                                        <Link
                                                             href={`/patients/${appointment.patient.id}`}
                                                             className="flex items-center gap-2 hover:text-blue-600 transition-colors"
                                                         >
@@ -195,7 +209,7 @@ export default function DoctorAppointments({
                                     ))}
                                 </tbody>
                             </table>
-                            
+
                             {/* Pagination Controls */}
                             {totalCount > 0 && (
                                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 px-2 sm:px-0">
@@ -203,7 +217,7 @@ export default function DoctorAppointments({
                                         <div className="text-xs text-muted-foreground whitespace-nowrap">
                                             Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, totalCount)} of {totalCount}
                                         </div>
-                                        
+
                                         <Select
                                             value={itemsPerPage.toString()}
                                             onValueChange={(value) => {
@@ -221,7 +235,7 @@ export default function DoctorAppointments({
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                    
+
                                     <div className="flex items-center gap-1 sm:gap-2 order-1 sm:order-2">
                                         <Button
                                             variant="outline"
@@ -232,7 +246,7 @@ export default function DoctorAppointments({
                                         >
                                             <ChevronLeft />
                                         </Button>
-                                        
+
                                         <div className="flex items-center gap-1">
                                             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                                                 <Button
@@ -246,7 +260,7 @@ export default function DoctorAppointments({
                                                 </Button>
                                             ))}
                                         </div>
-                                        
+
                                         <Button
                                             variant="outline"
                                             size="sm"
@@ -262,7 +276,7 @@ export default function DoctorAppointments({
                         </div>
                     </div>
                 )}
-                
+
                 {!isLoading && appointments.length === 0 && (
                     <div className="text-center py-8 text-muted-foreground">
                         No appointments found
