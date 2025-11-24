@@ -14,10 +14,24 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { IconDotsVertical } from "@tabler/icons-react"
 import Link from "next/link"
+import { useState } from "react"
+import { useGetPatientsQuery } from "@/lib/api/patientsApi"
+import { useGetPatientStatsQuery } from "@/lib/api/patientStatsApi"
+import { Loader } from "@/components/dashboard/loader"
+import { toast } from "sonner"
+import { Card, CardContent } from "@/components/ui/card"
+import { 
+    Users, 
+    UserCheck, 
+    Building, 
+    TrendingUp,
+    Activity,
+    ShieldCheck
+} from "lucide-react"
 
 // Define your data type
 interface PatientData extends BaseTableData {
-    id: number
+    id: string
     photo: string
     name: string
     email: string
@@ -94,7 +108,7 @@ const patientColumns: ColumnDef<PatientData>[] = [
         header: "Gender",
         cell: ({ row }) => (
             <Badge variant="outline" className="text-muted-foreground px-1.5">
-                {row.original.gender}
+                {row.original.gender || "Not specified"}
             </Badge>
         ),
     },
@@ -154,165 +168,272 @@ const patientColumns: ColumnDef<PatientData>[] = [
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
                     <DropdownMenuItem>
-                        <Link href={`/doctors/${row.id}`} className="w-full">
-                        View Profile ${row.id}
+                        <Link href={`/patients/${row.original.id}`} className="w-full">
+                            View Profile
                         </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>Edit Details</DropdownMenuItem>
-                    <DropdownMenuItem>View Records</DropdownMenuItem>
+                    <DropdownMenuItem disabled>View Records</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         ),
     },
 ]
 
+// Stats Card Component
+const StatsCard = ({ 
+    title, 
+    value, 
+    icon: Icon, 
+    description,
+    trend,
+    className = "" 
+}: { 
+    title: string
+    value: string | number
+    icon: React.ElementType
+    description?: string
+    trend?: string
+    className?: string
+}) => (
+    <Card className={className}>
+        <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+                <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                        {title}
+                    </p>
+                    <div className="flex items-baseline gap-2">
+                        <p className="text-2xl font-bold">{value}</p>
+                        {trend && (
+                            <Badge variant="secondary" className="text-xs">
+                                {trend}
+                            </Badge>
+                        )}
+                    </div>
+                    {description && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {description}
+                        </p>
+                    )}
+                </div>
+                <div className="flex-shrink-0">
+                    <div className="p-3 rounded-full bg-primary/10">
+                        <Icon className="h-6 w-6 text-primary" />
+                    </div>
+                </div>
+            </div>
+        </CardContent>
+    </Card>
+)
+
 // Usage in your component
-export default function PatientsPage() {
-    const data: PatientData[] = [
-        {
-            id: 1,
-            photo: "https://i.pravatar.cc/150?img=1",
-            name: "John Smith",
-            email: "john.smith@email.com",
-            gender: "Male",
-            state: "California",
-            country: "United States",
-            is_active: true,
-            kyc_status: "VERIFIED",
-        },
-        {
-            id: 2,
-            photo: "https://i.pravatar.cc/150?img=5",
-            name: "Emma Johnson",
-            email: "emma.johnson@email.com",
-            gender: "Female",
-            state: "New York",
-            country: "United States",
-            is_active: true,
-            kyc_status: "VERIFIED",
-        },
-        {
-            id: 3,
-            photo: "https://i.pravatar.cc/150?img=8",
-            name: "Michael Brown",
-            email: "michael.brown@email.com",
-            gender: "Male",
-            state: "Texas",
-            country: "United States",
-            is_active: false,
-            kyc_status: "PENDING",
-        },
-        {
-            id: 4,
-            photo: "https://i.pravatar.cc/150?img=9",
-            name: "Sophia Davis",
-            email: "sophia.davis@email.com",
-            gender: "Female",
-            state: "Florida",
-            country: "United States",
-            is_active: true,
-            kyc_status: "REJECTED",
-        },
-        {
-            id: 5,
-            photo: "https://i.pravatar.cc/150?img=11",
-            name: "William Wilson",
-            email: "william.wilson@email.com",
-            gender: "Male",
-            state: "Illinois",
-            country: "United States",
-            is_active: true,
-            kyc_status: "VERIFIED",
-        },
-        {
-            id: 6,
-            photo: "https://i.pravatar.cc/150?img=16",
-            name: "Olivia Martinez",
-            email: "olivia.martinez@email.com",
-            gender: "Female",
-            state: "Washington",
-            country: "United States",
-            is_active: true,
-            kyc_status: "SUSPENDED",
-        },
-        {
-            id: 7,
-            photo: "https://i.pravatar.cc/150?img=17",
-            name: "James Anderson",
-            email: "james.anderson@email.com",
-            gender: "Male",
-            state: "Massachusetts",
-            country: "United States",
-            is_active: false,
-            kyc_status: "PENDING",
-        },
-        {
-            id: 8,
-            photo: "https://i.pravatar.cc/150?img=20",
-            name: "Isabella Taylor",
-            email: "isabella.taylor@email.com",
-            gender: "Female",
-            state: "Georgia",
-            country: "United States",
-            is_active: true,
-            kyc_status: "VERIFIED",
-        },
-        {
-            id: 9,
-            photo: "https://i.pravatar.cc/150?img=27",
-            name: "Benjamin Thomas",
-            email: "benjamin.thomas@email.com",
-            gender: "Male",
-            state: "Arizona",
-            country: "United States",
-            is_active: true,
-            kyc_status: "VERIFIED",
-        },
-        {
-            id: 10,
-            photo: "https://i.pravatar.cc/150?img=29",
-            name: "Mia Garcia",
-            email: "mia.garcia@email.com",
-            gender: "Female",
-            state: "Colorado",
-            country: "United States",
-            is_active: true,
-            kyc_status: "PENDING",
-        },
-    ]
+export default function AdminPatientsPage() {
+    const [currentPage, setCurrentPage] = useState(1)
+    const [pageSize, setPageSize] = useState(10)
+    const [searchQuery, setSearchQuery] = useState("")
+
+    const {
+        data: patientsResponse,
+        isLoading: patientsLoading,
+        error: fetchError,
+    } = useGetPatientsQuery({
+        page: currentPage,
+        page_size: pageSize,
+        search: searchQuery || undefined,
+    })
+
+    const {
+        data: statsData,
+        isLoading: statsLoading,
+        error: statsError
+    } = useGetPatientStatsQuery()
+
+    // Handle fetch errors
+    if (fetchError) {
+        toast.error("Failed to load patients list")
+        console.error("Fetch error:", fetchError)
+    }
+
+    if (statsError) {
+        console.error("Stats fetch error:", statsError)
+    }
 
     const handleDataChange = (newData: PatientData[]) => {
         console.log("Data changed:", newData)
-        // You can save the new order to your backend here
     }
 
     const handleRowsSelected = (selectedRows: PatientData[]) => {
         console.log("Selected rows:", selectedRows)
     }
 
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page)
+    }
+
+    // const handlePageSizeChange = (size: number) => {
+    //     setPageSize(size)
+    //     setCurrentPage(1)
+    // }
+
+    // Transform API data to table format
+    const tableData: PatientData[] = patientsResponse?.results?.map(patient => ({
+        ...patient,
+        // Ensure all required fields are present with fallbacks
+        photo: patient.photo || "",
+        gender: patient.gender || "Not specified",
+        state: patient.state || "Not specified",
+        country: patient.country || "Not specified",
+    })) || []
+
+    const isLoading = patientsLoading || statsLoading
+
     return (
         <div className="flex flex-1 flex-col gap-4 p-5 pt-0">
-            <div className="grid auto-rows-min gap-4 md:grid-cols-3 mb-7">
-                <div className="bg-muted/50 aspect-video rounded-xl" />
-                <div className="bg-muted/50 aspect-video rounded-xl" />
-                <div className="bg-muted/50 aspect-video rounded-xl" />
+            {/* Admin Patient Stats Cards - 4 Most Important System-wide Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
+                {statsLoading ? (
+                    // Loading state for stats cards
+                    Array.from({ length: 4 }).map((_, index) => (
+                        <Card key={index} className="animate-pulse">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex-1 space-y-2">
+                                        <div className="h-4 bg-muted rounded w-3/4"></div>
+                                        <div className="h-6 bg-muted rounded w-1/2"></div>
+                                    </div>
+                                    <div className="w-12 h-12 bg-muted rounded-full"></div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))
+                ) : statsData ? (
+                    // Admin Dashboard Patient Stats - 4 Most Important System-wide Cards
+                    <>
+                        {/* Total Patients - System-wide overview */}
+                        <StatsCard
+                            title="Total Patients"
+                            value={statsData.total_patients || 0}
+                            icon={Users}
+                            description="System-wide patients"
+                            className="border-l-4 border-l-blue-500"
+                        />
+                        
+                        {/* Active Patients - Engagement metric */}
+                        <StatsCard
+                            title="Active Patients"
+                            value={statsData.active_patients || 0}
+                            icon={Activity}
+                            description="Currently active"
+                            className="border-l-4 border-l-green-500"
+                        />
+                        
+                        {/* System KYC Completion - Compliance metric */}
+                        <StatsCard
+                            title="System KYC Rate"
+                            value={`${'system_wide_kyc_completion' in statsData ? (statsData as any).system_wide_kyc_completion : 0}%`}
+                            icon={ShieldCheck}
+                            description="Verification compliance"
+                            className="border-l-4 border-l-orange-500"
+                        />
+                        
+                        {/* Active Hospitals - Network metric */}
+                        <StatsCard
+                            title="Active Hospitals"
+                            value={'total_hospitals_with_patients' in statsData ? (statsData as any).total_hospitals_with_patients : 0}
+                            icon={Building}
+                            description="Hospitals with patients"
+                            className="border-l-4 border-l-purple-500"
+                        />
+                    </>
+                ) : (
+                    // Fallback when no stats data
+                    <>
+                        <StatsCard
+                            title="Total Patients"
+                            value={patientsResponse?.count || 0}
+                            icon={Users}
+                            description="System-wide patients"
+                            className="border-l-4 border-l-blue-500"
+                        />
+                        <StatsCard
+                            title="Active Patients"
+                            value={0}
+                            icon={Activity}
+                            description="Currently active"
+                            className="border-l-4 border-l-green-500"
+                        />
+                        <StatsCard
+                            title="KYC Completion"
+                            value="0%"
+                            icon={ShieldCheck}
+                            description="System verification rate"
+                            className="border-l-4 border-l-orange-500"
+                        />
+                        <StatsCard
+                            title="Growth Rate"
+                            value="0%"
+                            icon={TrendingUp}
+                            description="Monthly growth"
+                            className="border-l-4 border-l-purple-500"
+                        />
+                    </>
+                )}
             </div>
 
+            {/* Additional Admin Insights Row */}
+            {statsData && 'patients_growth_rate' in statsData && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-7">
+                    <StatsCard
+                        title="Monthly Growth"
+                        value={`${(statsData as any).patients_growth_rate || 0}%`}
+                        icon={TrendingUp}
+                        description="Patient growth rate"
+                        className="border-l-4 border-l-green-500"
+                    />
+                    <StatsCard
+                        title="Verified Patients"
+                        value={statsData.verified_patients || 0}
+                        icon={UserCheck}
+                        description="KYC verified"
+                        className="border-l-4 border-l-blue-500"
+                    />
+                    <StatsCard
+                        title="Pending KYC"
+                        value={statsData.pending_kyc || 0}
+                        icon={ShieldCheck}
+                        description="Awaiting verification"
+                        className="border-l-4 border-l-yellow-500"
+                    />
+                </div>
+            )}
+
             <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min px-7 py-10">
-                <DataTable
-                    data={data}
-                    columns={patientColumns}
-                    enableDragDrop={true}
-                    enableRowSelection={true}
-                    enableColumnVisibility={true}
-                    enablePagination={true}
-                    onDataChange={handleDataChange}
-                    onRowsSelected={handleRowsSelected}
-                    showAddButton={false}
-                    pageSize={10}
-                />
+                {isLoading ? (
+                    <div className="flex items-center justify-center h-32">
+                        <Loader />
+                    </div>
+                ) : (
+                    <DataTable
+                        data={tableData}
+                        columns={patientColumns}
+                        enableDragDrop={true}
+                        enableRowSelection={true}
+                        enableColumnVisibility={true}
+                        enablePagination={true}
+                        onDataChange={handleDataChange}
+                        onRowsSelected={handleRowsSelected}
+                        showAddButton={false}
+                        pageSize={pageSize}
+                        currentPage={currentPage}
+                        // totalItems={patientsResponse?.count || 0}
+                        onPageChange={handlePageChange}
+                        // onPageSizeChange={handlePageSizeChange}
+                        isLoading={isLoading}
+                        searchValue={searchQuery}
+                        onSearchChange={setSearchQuery}
+                    />
+                )}
             </div>
         </div>
     )
