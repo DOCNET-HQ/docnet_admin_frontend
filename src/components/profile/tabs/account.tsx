@@ -9,7 +9,6 @@ import {
 import { Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -35,20 +34,20 @@ export default function Account(
         }
     }
 
-    const handleVisibilityChange = async (checked: boolean) => {
-        // Optimistically update the UI
-        setVisibilityState(checked);
+    // const handleVisibilityChange = async (checked: boolean) => {
+    //     // Optimistically update the UI
+    //     setVisibilityState(checked);
 
-        try {
-            await updateProfile({ is_visible: checked }).unwrap();
-            toast.success(`Account visibility ${checked ? 'enabled' : 'disabled'} successfully!`);
-        } catch (err: any) {
-            // Revert the state if the update fails
-            setVisibilityState(!checked);
-            const errorMessage = err?.data?.message || 'Failed to update account visibility. Please try again.';
-            toast.error(errorMessage);
-        }
-    };
+    //     try {
+    //         await updateProfile({ is_visible: checked }).unwrap();
+    //         toast.success(`Account visibility ${checked ? 'enabled' : 'disabled'} successfully!`);
+    //     } catch (err: any) {
+    //         // Revert the state if the update fails
+    //         setVisibilityState(!checked);
+    //         const errorMessage = err?.data?.message || 'Failed to update account visibility. Please try again.';
+    //         toast.error(errorMessage);
+    //     }
+    // };
 
     return (
         <TabsContent value="account" className="space-y-6">
